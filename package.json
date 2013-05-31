@@ -1,6 +1,6 @@
 {
   "name": "config-mancer",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "main": "index.js",
   "description": "Configuration file utilities",
   "repository": "git://github.com/jpka/node-config-mancer.git",

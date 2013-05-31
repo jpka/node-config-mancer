@@ -71,18 +71,17 @@ exports.modify = function(filePath, cb) {
 };
 
 exports.getAsStream = function(filePath) {
-  var stream = new writableStream({objectMode: true}),
-  config;
+  var stream = new writableStream({objectMode: true});
 
-  function onWritable(cb) {
-    if (config) return cb();
-    stream.on("writable", cb);
+  function onFileLoaded(cb) {
+    if (stream.object) return cb();
+    stream.on("fileLoaded", cb);
   };
 
   stream._write = function(data, encoding, callback) {
-    onWritable(function() {
+    onFileLoaded(function() {
       var keys = data[0].split("."),
-      level = config;
+      level = stream.object;
 
       keys.forEach(function(key, i) {
         if (i < keys.length - 1) {
@@ -97,10 +96,12 @@ exports.getAsStream = function(filePath) {
     });
   };
 
-  exports.modify(filePath, function(err, conf, save) {
-    config = conf;
-    stream.emit("writable");
-
+  exports.modify(filePath, function(err, config, save) {
+    stream.object = config;
+    //This happens way too fast
+    process.nextTick(function() {
+      stream.emit("fileLoaded");
+    });
     stream.on("finish", function() {
       save(config, function(err) {
         if (err) return stream.emit("error", err);

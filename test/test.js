@@ -19,39 +19,56 @@ afterEach(function(done) {
   fs.remove(fixturePath("require-copy.js"), done);
 });
 
-it("gets as object", function(done) {
-  lib.get(fixturePath("require.js"), function(err, config) {
-    config.paths.a.should.equal("path/to/a");
-    done();
+describe("get()", function() {
+  it("works", function(done) {
+    lib.get(fixturePath("require.js"), function(err, config) {
+      config.paths.a.should.equal("path/to/a");
+      done();
+    });
   });
-});
 
-it("modifies", function(done) {
-  lib.modify(fixturePath("require-copy.js"), function(err, config, save) {
-    config.paths.b = "path/to/b";
-
-    save(config, function(err) {
-      fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
+  it("works with json files", function(done) {
+    lib.get(fixturePath("json.json"), function(err, config) {
+      expect(config).exist.and.to.have.property("a");
+      expect(config.a).to.equal(1);
       done();
     });
   });
 });
 
-it("gets as a write stream", function(done) {
-  var stream = lib.getAsStream(fixturePath("require-copy.js"));
-  stream.write(["paths.b", "path/to/b"], null, function() {
-    stream.end();
-  });
-  stream.on("fileWritten", function() {
-    fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
-    done();
+describe("modify()", function() {
+  it("works", function(done) {
+    lib.modify(fixturePath("require-copy.js"), function(err, config, save) {
+      config.paths.b = "path/to/b";
+
+      save(config, function(err) {
+        fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
+        done();
+      });
+    });
   });
 });
 
-it("works with json files", function(done) {
-  lib.get(fixturePath("json.json"), function(err, config) {
-    expect(config).exist.and.to.have.property("a");
-    expect(config.a).to.equal(1);
-    done();
+describe("getAsStream()", function() {
+  it("works", function(done) {
+    var stream = lib.getAsStream(fixturePath("require-copy.js"));
+    stream.write(["paths.b", "path/to/b"], null, function() {
+      stream.end();
+    });
+    stream.on("fileWritten", function() {
+      fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
+      done();
+    });
+  });
+
+  it("has a property with the actual object", function(done) {
+    lib.getAsStream(fixturePath("require-copy.js"))
+    .on("fileLoaded", function() {
+      this.should.have.property("object");
+      this.object.should.have.property("paths");
+      done();
+    });
   });
 });
+
+
