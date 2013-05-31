@@ -70,7 +70,7 @@ exports.modify = function(filePath, cb) {
   });
 };
 
-exports.getAsStream = function(filePath) {
+exports.getAsStream = function(filePath, sub) {
   var stream = new writableStream({objectMode: true});
 
   function onFileLoaded(cb) {
@@ -82,6 +82,10 @@ exports.getAsStream = function(filePath) {
     onFileLoaded(function() {
       var keys = data[0].split("."),
       level = stream.object;
+      if (sub) {
+        level = level[sub];
+        if (!level) level = {};
+      }
 
       keys.forEach(function(key, i) {
         if (i < keys.length - 1) {

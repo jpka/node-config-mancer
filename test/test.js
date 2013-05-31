@@ -51,13 +51,13 @@ describe("modify()", function() {
 
 describe("getAsStream()", function() {
   it("works", function(done) {
-    var stream = lib.getAsStream(fixturePath("require-copy.js"));
-    stream.write(["paths.b", "path/to/b"], null, function() {
-      stream.end();
-    });
-    stream.on("fileWritten", function() {
+    var stream = lib.getAsStream(fixturePath("require-copy.js"))
+    .on("fileWritten", function() {
       fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
       done();
+    });
+    stream.write(["paths.b", "path/to/b"], null, function() {
+      stream.end();
     });
   });
 
@@ -67,6 +67,17 @@ describe("getAsStream()", function() {
       this.should.have.property("object");
       this.object.should.have.property("paths");
       done();
+    });
+  });
+
+  it("works with sub objects", function(done) {
+    var stream = lib.getAsStream(fixturePath("require-copy.js"), "paths")
+    .on("fileWritten", function() {
+      fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
+      done();
+    });
+    stream.write(["b", "path/to/b"], null, function() {
+      stream.end();
     });
   });
 });

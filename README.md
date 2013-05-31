@@ -11,10 +11,12 @@ gets the config as an object along with some other data
 
 gets the config as an object along with an async save callback
 
-### getAsStream(filePath)
+### getAsStream(filePath [, subObject])
 
 returns the config as a write stream ([streams2](http://blog.nodejs.org/2012/12/20/streams2/) supported).
 It will get the config, modify it and save it to filesystem once end() is called.
+
+subObject is optional and indicates the subobject you will be writing to, defaults to the root, see below for example.
 
 #Usage
 
@@ -28,8 +30,8 @@ require("config-mancer").modify("scripts/rjs-config.js", function(err, config, s
 ```
 
 ```javascript
-var config = require("config-mancer").getAsStream("scripts/rjs-config.js")
-config.write(["paths.jquery", "vendor/jquery.js"]);
+var config = require("config-mancer").getAsStream("scripts/rjs-config.js", "paths")
+config.write(["jquery", "vendor/jquery.js"]); // will write to paths.jquery
 config.on("fileWritten", function(err) {
   // file saved
 });
