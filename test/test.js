@@ -9,17 +9,20 @@ fixturePath = function(name) {
 fixtureContents = function(name) {
   return fs.readFileSync(fixturePath(name)).toString();
 },
-lib = require("../");
-
-beforeEach(function(done) {
-  fs.copy(fixturePath("require.js"), fixturePath("require-copy.js"), done);
-});
+lib = require("../"),
+copyFixture = function(name) {
+  return function(done) {
+    fs.copy(fixturePath(name), fixturePath("require-copy.js"), done);
+  };
+};
 
 afterEach(function(done) {
   fs.remove(fixturePath("require-copy.js"), done);
 });
 
 describe("get()", function() {
+  beforeEach(copyFixture("require.js"));
+
   it("works", function(done) {
     lib.get(fixturePath("require.js"), function(err, config) {
       config.paths.a.should.equal("path/to/a");
@@ -37,6 +40,8 @@ describe("get()", function() {
 });
 
 describe("modify()", function() {
+  beforeEach(copyFixture("require.js"));
+
   it("works", function(done) {
     lib.modify(fixturePath("require-copy.js"), function(err, config, save) {
       config.paths.b = "path/to/b";
@@ -49,7 +54,36 @@ describe("modify()", function() {
   });
 });
 
+describe("get() with empty config", function() {
+  beforeEach(copyFixture('require-empty.js'));
+
+  it("creates an empty config object in the callback", function(done) {
+    lib.get(fixturePath("require-copy.js"), function(err, config, data) {
+      expect(config).exist.and.to.be.an('object').and.to.be.empty;
+      done();
+    });
+  });
+
+  it("works", function(done) {
+    lib.modify(fixturePath("require-copy.js"), function(err, config, save) {
+      expect(config).exist.and.to.be.an('object').and.to.be.empty;
+
+      config.paths = {
+        a: "path/to/a",
+        b: "path/to/b"
+      };
+
+      save(config, function(err) {
+        fixtureContents("require-copy.js").should.equal(fixtureContents("require-expected.js"));
+        done();
+      });
+    });
+  });
+});
+
 describe("getAsStream()", function() {
+  beforeEach(copyFixture("require.js"));
+
   it("works", function(done) {
     var stream = lib.getAsStream(fixturePath("require-copy.js"))
     .on("fileWritten", function() {
@@ -81,5 +115,3 @@ describe("getAsStream()", function() {
     });
   });
 });
-
-

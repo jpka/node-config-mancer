@@ -43,16 +43,26 @@ exports.get = function(filePath, cb) {
   traverse(esprima.parse(fileContents, {range: true}), function(node) {
     if (node.type === "ObjectExpression") {
       info.str = fileContents.substring(node.range[0], node.range[1]);
+      var config;
+
       try {
-        cb(null, eval("(" + info.str + ")"), info);
+        config = eval("(" + info.str + ")");
       } catch(e) {
         cb(e);
       }
+
+      cb(null, config, info);
       return false;
     }
     return true;
   });
 };
+
+function detectIndent(str) {
+  var match = str.match(/\{[\r\n]+([ \t]+)/);
+
+  return match ? match[1] : "  ";
+}
 
 exports.modify = function(filePath, cb) {
   exports.get(filePath, function(err, config, data) {
@@ -61,7 +71,7 @@ exports.modify = function(filePath, cb) {
 
     save = function(config, cb) {
       var str = require("stringify-object")(config, {
-        indent: data.str.match(/\{[\r\n]+([ \t]+)/)[1],
+        indent: detectIndent(data.str),
         singleQuotes: false
       });
       fs.writeFile(filePath, data.src.replace(data.str, str), cb);
