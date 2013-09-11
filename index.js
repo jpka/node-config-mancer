@@ -41,9 +41,10 @@ exports.get = function(filePath, cb) {
   }
 
   traverse(esprima.parse(fileContents, {range: true}), function(node) {
+    var config;
+
     if (node.type === "ObjectExpression") {
       info.str = fileContents.substring(node.range[0], node.range[1]);
-      var config;
 
       try {
         config = eval("(" + info.str + ")");
