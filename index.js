@@ -50,6 +50,7 @@ exports.get = function(filePath, cb) {
         config = eval("(" + info.str + ")");
       } catch(e) {
         cb(e);
+        return false;
       }
 
       cb(null, config, info);
